@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nano Banana Image Generator</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="//libtl.com/sdk.js" data-zone="9625198" data-sdk="show_9625198"></script>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --card-bg: #f8f9fa;
+            --border-color: #dee2e6;
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+        }
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --card-bg: #1e1e1e;
+            --border-color: #333333;
+            --primary-color: #0d6efd;
+            --secondary-color: #adb5bd;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav {
+            display: flex;
+            gap: 1rem;
+        }
+        nav button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.3s;
+        }
+        nav button.active, nav button:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        #theme-toggle {
+            background: none;
+            border: 1px solid white;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+        main {
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        section {
+            display: none;
+            background-color: var(--card-bg);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+        }
+        section.active {
+            display: block;
+        }
+        h1, h2 {
+            margin-top: 0;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        label {
+            font-weight: bold;
+        }
+        input, textarea, select {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: var(--primary-color);
+        }
+        .upload-area.dragover {
+            border-color: var(--primary-color);
+            background-color: rgba(0,123,255,0.1);
+        }
+        #reference-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .image-preview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 0.25rem;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: var(--secondary-color);
+            cursor: not-allowed;
+        }
+        #generated-image {
+            max-width: 100%;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .download-section {
+            margin-top: 1rem;
+        }
+        .ad-section {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 1rem;
+            border-radius: 0.25rem;
+            margin-top: 1rem;
+        }
+        [data-theme="dark"] .ad-section {
+            background-color: #2d1b00;
+            border-color: #856404;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <header>
+        <h1>Nano Banana Image Generator</h1>
+        <nav>
+            <button data-section="text-to-image" class="active">Text to Image</button>
+            <button data-section="image-to-image">Image to Image</button>
+            <button data-section="passport">Passport Photo</button>
+            <button data-section="editor">Image Editor</button>
+        </nav>
+        <button id="theme-toggle">🌙</button>
+    </header>
+    <main>
+        <section id="text-to-image" class="active">
+            <h2>Text to Image</h2>
+            <form id="tti-form">
+                <label for="tti-prompt">Prompt:</label>
+                <textarea id="tti-prompt" required placeholder="Describe the image you want to generate..."></textarea>
+                <div class="upload-area" id="tti-upload">
+                    <p>Upload reference images (optional, multiple allowed)</p>
+                    <input type="file" id="tti-file" multiple accept="image/*" hidden>
+                </div>
+                <div id="tti-reference-images"></div>
+                <label>
+                    <input type="checkbox" id="tti-upscale"> Upscale Image
+                </label>
+                <button type="submit">Generate Image</button>
+            </form>
+            <div id="tti-result" class="hidden">
+                <img id="tti-generated" alt="Generated Image">
+                <div class="download-section">
+                    <button id="tti-download" disabled>Download Image (Watch 3 Ads First)</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="image-to-image">
+            <h2>Image to Image</h2>
+            <form id="iti-form">
+                <label for="iti-prompt">Prompt:</label>
+                <textarea id="iti-prompt" required placeholder="Describe changes or style..."></textarea>
+                <div class="upload-area" id="iti-upload">
+                    <p>Upload base image and references (multiple allowed)</p>
+                    <input type="file" id="iti-file" multiple accept="image/*" hidden>
+                </div>
+                <div id="iti-reference-images"></div>
+                <label>
+                    <input type="checkbox" id="iti-upscale"> Upscale Image
+                </label>
+                <button type="submit">Generate Image</button>
+            </form>
+            <div id="iti-result" class="hidden">
+                <img id="iti-generated" alt="Generated Image">
+                <div class="download-section">
+                    <button id="iti-download" disabled>Download Image (Watch 3 Ads First)</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="passport">
+            <h2>Passport Photograph</h2>
+            <form id="passport-form">
+                <label for="passport-prompt">Additional Prompt (optional):</label>
+                <textarea id="passport-prompt" placeholder="Add details for headshot..."></textarea>
+                <div class="upload-area" id="passport-upload">
+                    <p>Upload multiple images for reference</p>
+                    <input type="file" id="passport-file" multiple accept="image/*" hidden>
+                </div>
+                <div id="passport-reference-images"></div>
+                <label for="passport-bg">Background Design/Color:</label>
+                <select id="passport-bg">
+                    <option value="solid-white">Solid White</option>
+                    <option value="solid-blue">Solid Blue</option>
+                    <option value="gradient-blue">Gradient Blue</option>
+                    <option value="pattern-gray">Pattern Gray</option>
+                </select>
+                <label>
+                    <input type="checkbox" id="passport-upscale"> Upscale Image
+                </label>
+                <button type="submit">Generate Passport Photo</button>
+            </form>
+            <div id="passport-result" class="hidden">
+                <img id="passport-generated" alt="Passport Photo">
+                <div class="download-section">
+                    <button id="passport-download" disabled>Download Image (Watch 3 Ads First)</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="editor">
+            <h2>Image Editor</h2>
+            <form id="editor-form">
+                <label for="editor-prompt">AI Edit Prompt:</label>
+                <textarea id="editor-prompt" required placeholder="Describe the edits..."></textarea>
+                <div class="upload-area" id="editor-upload">
+                    <p>Upload image to edit and references (multiple allowed)</p>
+                    <input type="file" id="editor-file" multiple accept="image/*" hidden>
+                </div>
+                <div id="editor-reference-images"></div>
+                <label>
+                    <input type="checkbox" id="editor-turn-passport"> Turn into Passport Photo
+                </label>
+                <label>
+                    <input type="checkbox" id="editor-upscale"> Upscale Image
+                </label>
+                <button type="submit">Edit Image</button>
+            </form>
+            <div id="editor-result" class="hidden">
+                <img id="editor-generated" alt="Edited Image">
+                <div class="download-section">
+                    <button id="editor-download" disabled>Download Image (Watch 3 Ads First)</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            body.setAttribute('data-theme', newTheme);
+            themeToggle.textContent = newTheme === 'light' ? '🌙' : '☀️';
+        });
+
+        // Navigation
+        const navButtons = document.querySelectorAll('nav button[data-section]');
+        const sections = document.querySelectorAll('section');
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                sections.forEach(sec => sec.classList.remove('active'));
+                document.getElementById(button.dataset.section).classList.add('active');
+            });
+        });
+
+        // File Upload Handling (common)
+        function setupUpload(uploadAreaId, fileInputId, previewId) {
+            const uploadArea = document.getElementById(uploadAreaId);
+            const fileInput = document.getElementById(fileInputId);
+            const preview = document.getElementById(previewId);
+            let files = [];
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => {
+                files = Array.from(e.target.files);
+                preview.innerHTML = '';
+                files.forEach(file => {
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    img.classList.add('image-preview');
+                    preview.appendChild(img);
+                });
+            });
+
+            // Drag and drop
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const droppedFiles = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                files.push(...droppedFiles);
+                preview.innerHTML = '';
+                files.forEach(file => {
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    img.classList.add('image-preview');
+                    preview.appendChild(img);
+                });
+                fileInput.files = files; // For form submission
+            });
+        }
+
+        setupUpload('tti-upload', 'tti-file', 'tti-reference-images');
+        setupUpload('iti-upload', 'iti-file', 'iti-reference-images');
+        setupUpload('passport-upload', 'passport-file', 'passport-reference-images');
+        setupUpload('editor-upload', 'editor-file', 'editor-reference-images');
+
+        // Google Sign-In (for API access, assuming OAuth setup)
+        function initGoogleSignIn() {
+            google.accounts.id.initialize({
+                client_id: 'YOUR_CLIENT_ID', // Replace with actual if needed, but using API key directly
+                callback: handleCredentialResponse
+            });
+            // google.accounts.id.renderButton(document.getElementById('g-signin'), { theme: 'outline', size: 'large' });
+        }
+
+        let accessToken = null;
+        function handleCredentialResponse(response) {
+            // Decode token if needed, but for simplicity, assume API key for REST calls
+            // In production, exchange for access token
+        }
+
+        // API Call Function using Nano Banana via Gemini API
+        async function generateImage(prompt, imageFiles = [], options = {}) {
+            const formData = new FormData();
+            formData.append('prompt', prompt);
+            if (options.upscale) formData.append('upscale', 'true');
+            if (options.background) formData.append('background', options.background);
+            if (options.passport) formData.append('passport', 'true');
+
+            imageFiles.forEach((file, index) => {
+                formData.append(`image${index}`, file);
+            });
+
+            try {
+                const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=AIzaSyBboVl5sj3lrHtz84CMJpJDRTpA9Y9SS-8', {
+                    method: 'POST',
+                    headers: {
+                        // 'Authorization': `Bearer ${accessToken}`, // If using OAuth
+                    },
+                    body: formData // Note: For multipart, but Gemini API typically uses JSON with base64 images
+                });
+
+                // Adjust for actual Gemini API format: base64 encode images
+                // For simplicity, assuming a wrapper or direct; in reality, convert files to base64
+                const data = {
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    ]},
+                    generationConfig: {
+                        // Config for image gen
+                    },
+                    // For images, add as inline data if supported
+                };
+                // Placeholder: In real impl, use base64 for uploaded images in parts
+                // For Nano Banana editing: Use generateContent with image parts for editing
+
+                const result = await response.json();
+                // Assume result.candidates[0].content.parts[0].inlineData.data is base64 image
+                return `data:image/png;base64,${result.candidates[0].content.parts[0].inlineData.data}`;
+            } catch (error) {
+                console.error('Error generating image:', error);
+                alert('Error generating image. Check console.');
+                return null;
+            }
+        }
+
+        // Form Handlers
+        async function handleForm(formId, resultId, generatedId, downloadId, optionsExtractor) {
+            const form = document.getElementById(formId);
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const prompt = form.querySelector('textarea[required]').value;
+                const fileInput = form.querySelector('input[type="file"]');
+                const files = Array.from(fileInput.files);
+                const options = optionsExtractor(form);
+
+                const imgSrc = await generateImage(prompt, files, options);
+                if (imgSrc) {
+                    const img = document.getElementById(generatedId);
+                    img.src = imgSrc;
+                    document.getElementById(resultId).classList.remove('hidden');
+                    document.getElementById(downloadId).disabled = false;
+                    // Store imgSrc for download
+                    img.dataset.src = imgSrc;
+                }
+            });
+
+            // Download with Ads
+            document.getElementById(downloadId).addEventListener('click', async () => {
+                const btn = document.getElementById(downloadId);
+                btn.disabled = true;
+                btn.textContent = 'Watching Ads...';
+
+                try {
+                    // Watch 3 rewarded ads
+                    for (let i = 0; i < 3; i++) {
+                        await show_9625198('pop').then(() => {
+                            console.log(`Ad ${i+1} completed`);
+                        }).catch(e => {
+                            console.error('Ad error:', e);
+                            alert('Ad error, but proceeding...');
+                        });
+                    }
+                    // Download
+                    const img = document.getElementById(generatedId);
+                    const a = document.createElement('a');
+                    a.href = img.dataset.src;
+                    a.download = 'generated-image.png';
+                    a.click();
+                } catch (error) {
+                    console.error('Download error:', error);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Download Image (Watch 3 Ads First)';
+                }
+            });
+        }
+
+        // Options Extractors
+        const ttiOptions = (form) => ({ upscale: form.querySelector('#tti-upscale').checked });
+        const itiOptions = (form) => ({ upscale: form.querySelector('#iti-upscale').checked });
+        const passportOptions = (form) => ({
+            background: form.querySelector('#passport-bg').value,
+            upscale: form.querySelector('#passport-upscale').checked
+        });
+        const editorOptions = (form) => ({
+            passport: form.querySelector('#editor-turn-passport').checked,
+            upscale: form.querySelector('#editor-upscale').checked
+        });
+
+        // Initialize handlers
+        handleForm('tti-form', 'tti-result', 'tti-generated', 'tti-download', ttiOptions);
+        handleForm('iti-form', 'iti-result', 'iti-generated', 'iti-download', itiOptions);
+        handleForm('passport-form', 'passport-result', 'passport-generated', 'passport-download', passportOptions);
+        handleForm('editor-form', 'editor-result', 'editor-generated', 'editor-download', editorOptions);
+
+        // Init
+        initGoogleSignIn();
+        // Note: In production, handle base64 conversion for images in generateImage
+        // For passport: Append background to prompt, e.g., prompt += ` passport photo with ${bg} background`
+        // For editor passport: If checked, add to prompt
+        // Adjust API call to include uploaded images as base64 in parts for editing
+        // Example for editing: parts: [{text: prompt}, {inlineData: {mimeType: 'image/jpeg', data: base64}}]
+    </script>
+</body>
+</html>
