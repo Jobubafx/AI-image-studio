@@ -175,7 +175,7 @@
         <div id="content">
             <!-- Text to Image -->
             <div class="tab active" id="t2i">
-                <label>Reference Images (optional, up to 3):</label>
+                <label>Reference Images (optional, up to 8):</label>
                 <input type="file" multiple accept="image/*" id="refs-t2i">
                 <label>Prompt:</label>
                 <textarea id="prompt-t2i" placeholder="Describe the image you want to generate..."></textarea>
@@ -184,7 +184,7 @@
 
             <!-- Image to Image -->
             <div class="tab" id="i2i">
-                <label>Reference Images (at least 1, up to 3):</label>
+                <label>Reference Images (at least 1, up to 8):</label>
                 <input type="file" multiple accept="image/*" id="refs-i2i">
                 <label>Prompt:</label>
                 <textarea id="prompt-i2i" placeholder="Describe changes or style..."></textarea>
@@ -281,8 +281,8 @@
                 alert('Please upload at least one reference image.');
                 return;
             }
-            if (files.length > 3) {
-                alert('Maximum 3 reference images allowed.');
+            if (files.length > 8) {
+                alert('Maximum 8 reference images allowed.');
                 return;
             }
             if (!promptInput.value.trim() && type === 't2i') {
