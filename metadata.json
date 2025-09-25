@@ -1,0 +1,5 @@
+{
+  "name": "AI Image Studio",
+  "description": "An AI-powered image generator and editor using Google's Gemini models. It features a responsive design, real-time image generation previews, background removal, creative concept generation, and a gallery for users to save and manage their creations.",
+  "requestFramePermissions": []
+}
